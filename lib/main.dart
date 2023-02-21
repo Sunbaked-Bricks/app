@@ -1,4 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+
+Future<int> createTelegram(String title) async {
+  final response = await http.post(
+    Uri.parse(
+        'https://api.telegram.org/bot6104762881:AAHzCLE49Y99iCf9l10uwWAB4zZUYVoWBR0/sendMessage'),
+    headers: <String, String>{
+      'Content-Type': 'application/json; charset=UTF-8',
+    },
+    body: jsonEncode(<String, String>{
+      'chat_id': '5318933078',
+      'text': title,
+    }),
+  );
+
+  return response.statusCode;
+}
 
 void main() {
   runApp(const MyApp());
@@ -48,16 +67,20 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  String display = 'waiting';
+  late int code;
 
-  void _incrementCounter() {
+  void _postMessage() async {
+    code = await createTelegram('Hello? Is anybody out there?');
     setState(() {
+      if (code == 200) {
+        display = "message sent succesfully";
+      } else {
+        display = "error sending message: $code";
+      }
       // This call to setState tells the Flutter framework that something has
       // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      // so that the display can reflect the updated values.
     });
   }
 
@@ -96,17 +119,17 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             const Text(
-              'Times clicked',
+              'message status',
             ),
             Text(
-              '$_counter',
+              display,
               style: Theme.of(context).textTheme.headlineMedium,
             ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
+        onPressed: _postMessage,
         tooltip: 'Increment',
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
