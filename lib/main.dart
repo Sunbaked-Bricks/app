@@ -15,7 +15,7 @@ Future<String> get _localPath async {
 
 Future<File> get _localFile async {
   final path = await _localPath;
-  return File('$path/counter.txt');
+  return File('$path/test.txt');
 }
 
 Future<File> writeMessage(String message) async {
@@ -39,20 +39,30 @@ Future<String> readMessage() async {
   }
 }
 
-Future<int> createTelegram(String title) async {
+Future<int> createPOST(String title) async {
   final response = await http.post(
-    Uri.parse(
-        'https://api.telegram.org/bot6104762881:AAHzCLE49Y99iCf9l10uwWAB4zZUYVoWBR0/sendMessage'),
+    Uri.parse('http://192.168.1.1/info'),
     headers: <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
     },
     body: jsonEncode(<String, String>{
-      'chat_id': '5318933078',
+      'test': 'hello',
       'text': title,
     }),
   );
 
   return response.statusCode;
+}
+
+Future<String> createGET() async {
+  final response = await http.get(
+    Uri.parse('http://192.168.1.1/getTemp'),
+    headers: <String, String>{
+      'Content-Type': 'application/json; charset=UTF-8',
+    },
+  );
+
+  return response.body;
 }
 
 void main() {
@@ -105,15 +115,22 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   String display = 'waiting';
   late int code;
+  late String resp;
 
   void _postMessage() async {
-    code = await createTelegram('Hello? Is anybody out there?');
+    resp = await createGET();
+    code = 200;
+
+    //code = await createPOST('Hello? Is anybody out there?');
+    writeMessage("hello, are you there");
     setState(() {
       if (code == 200) {
         display = "message sent succesfully";
       } else {
         display = "error sending message: $code";
       }
+
+      display = resp;
       // This call to setState tells the Flutter framework that something has
       // changed in this State, which causes it to rerun the build method below
       // so that the display can reflect the updated values.
