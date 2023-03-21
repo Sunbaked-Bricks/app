@@ -53,8 +53,14 @@ Future<http.Response> createPOST(String title) async {
     );
 
     return response;
-  } on Exception catch (e) {
-    final http.Response ret = http.Response(e.toString(), 408);
+  } on SocketException catch (e) {
+    final http.Response ret = http.Response("Timeout", 408);
+    return ret;
+  } on TimeoutException catch (e) {
+    final http.Response ret = http.Response("Timeout", 409);
+    return ret;
+  } on Error catch (e) {
+    final http.Response ret = http.Response(e.stackTrace.toString(), 404);
     return ret;
   }
 }
@@ -69,8 +75,14 @@ Future<http.Response> createGET() async {
     );
 
     return response;
-  } on Exception catch (e) {
-    final http.Response ret = http.Response(e.toString(), 408);
+  } on SocketException catch (e) {
+    final http.Response ret = http.Response("Timeout", 408);
+    return ret;
+  } on TimeoutException catch (e) {
+    final http.Response ret = http.Response("Timeout", 409);
+    return ret;
+  } on Error catch (e) {
+    final http.Response ret = http.Response(e.stackTrace.toString(), 404);
     return ret;
   }
 }
@@ -123,46 +135,48 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  late String display;
-  late http.Response postResp;
-  late http.Response getResp;
-  late String indicator;
-
-  _MyHomePageState() {
-    display = 'waiting';
-    indicator = "do you ever wonder why we are here?";
-  }
+  int test = 0;
+  late String display = 'waiting';
+  late http.Response postResp = http.Response("none", 204);
+  http.Response getResp = http.Response("none", 204);
+  late String indicator = "do you ever wonder why we are here?";
+  late Timer clock;
 
   void _postMessage() async {
     getResp = await createGET();
     postResp = await createPOST('Hello? Is anybody out there?');
     //writeMessage("hello, are you there");
-    setState(() {
-      if (getResp.statusCode == 200 && postResp.statusCode == 200) {
-        indicator = "message sent succesfully, data retrieved succesfully";
-        display = getResp.body;
-      } else {
-        display =
-            "error sending message or data. Message code: $postResp.statusCode , Get request code: $getResp.statusCode";
-        if (getResp.statusCode == 200) {
-          display = getResp.body;
-        } else {
-          display = "error";
-        }
-      }
-
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values.
-    });
   }
 
-  late Timer clock = Timer.periodic(
-    const Duration(seconds: 10),
-    (timer) {
+  @override
+  void initState() {
+    super.initState();
+
+    //10 second clock that runs continuously
+    clock = Timer.periodic(const Duration(seconds: 10), (Timer t) {
+      //send out post and get requests
       _postMessage();
-    },
-  );
+
+      //after post and get, update screen to display information
+      setState(() {
+        if (getResp.statusCode == 200 && postResp.statusCode == 200) {
+          indicator = "message sent succesfully, data retrieved succesfully";
+          display = getResp.body;
+        } else {
+          int stat1 = postResp.statusCode;
+          int stat2 = getResp.statusCode;
+          indicator =
+              "error sending message or data. Message code: $stat1 , Get request code: $stat2";
+          if (getResp.statusCode == 200) {
+            display = getResp.body;
+          } else {
+            display = "error $test";
+          }
+          test++;
+        }
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
