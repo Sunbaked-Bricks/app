@@ -39,30 +39,40 @@ Future<String> readMessage() async {
   }
 }
 
-Future<int> createPOST(String title) async {
-  final response = await http.post(
-    Uri.parse('http://192.168.1.1/info'),
-    headers: <String, String>{
-      'Content-Type': 'application/json; charset=UTF-8',
-    },
-    body: jsonEncode(<String, String>{
-      'test': 'hello',
-      'text': title,
-    }),
-  );
+Future<http.Response> createPOST(String title) async {
+  try {
+    final response = await http.post(
+      Uri.parse('http://192.168.1.1/info'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{
+        'test': 'hello',
+        'text': title,
+      }),
+    );
 
-  return response.statusCode;
+    return response;
+  } on Exception catch (e) {
+    final http.Response ret = http.Response(e.toString(), 408);
+    return ret;
+  }
 }
 
-Future<String> createGET() async {
-  final response = await http.get(
-    Uri.parse('http://192.168.1.1/getTemp'),
-    headers: <String, String>{
-      'Content-Type': 'application/json; charset=UTF-8',
-    },
-  );
+Future<http.Response> createGET() async {
+  try {
+    final response = await http.get(
+      Uri.parse('http://192.168.1.1/getTemp'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+    );
 
-  return response.body;
+    return response;
+  } on Exception catch (e) {
+    final http.Response ret = http.Response(e.toString(), 408);
+    return ret;
+  }
 }
 
 void main() {
@@ -113,29 +123,46 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  String display = 'waiting';
-  late int code;
-  late String resp;
+  late String display;
+  late http.Response postResp;
+  late http.Response getResp;
+  late String indicator;
+
+  _MyHomePageState() {
+    display = 'waiting';
+    indicator = "do you ever wonder why we are here?";
+  }
 
   void _postMessage() async {
-    resp = await createGET();
-    code = 200;
-
-    //code = await createPOST('Hello? Is anybody out there?');
-    writeMessage("hello, are you there");
+    getResp = await createGET();
+    postResp = await createPOST('Hello? Is anybody out there?');
+    //writeMessage("hello, are you there");
     setState(() {
-      if (code == 200) {
-        display = "message sent succesfully";
+      if (getResp.statusCode == 200 && postResp.statusCode == 200) {
+        indicator = "message sent succesfully, data retrieved succesfully";
+        display = getResp.body;
       } else {
-        display = "error sending message: $code";
+        display =
+            "error sending message or data. Message code: $postResp.statusCode , Get request code: $getResp.statusCode";
+        if (getResp.statusCode == 200) {
+          display = getResp.body;
+        } else {
+          display = "error";
+        }
       }
 
-      display = resp;
       // This call to setState tells the Flutter framework that something has
       // changed in this State, which causes it to rerun the build method below
       // so that the display can reflect the updated values.
     });
   }
+
+  late Timer clock = Timer.periodic(
+    const Duration(seconds: 10),
+    (timer) {
+      _postMessage();
+    },
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -171,8 +198,8 @@ class _MyHomePageState extends State<MyHomePage> {
           // horizontal).
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text(
-              'message status',
+            Text(
+              indicator,
             ),
             Text(
               display,
