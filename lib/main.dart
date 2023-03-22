@@ -39,18 +39,13 @@ Future<String> readMessage() async {
   }
 }
 
-Future<http.Response> createPOST(String title) async {
+Future<http.Response> createPOST(Object data) async {
   try {
-    final response = await http.post(
-      Uri.parse('http://192.168.1.1/info'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, String>{
-        'test': 'hello',
-        'text': title,
-      }),
-    );
+    final response = await http.post(Uri.parse('http://192.168.1.1/info'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: data);
 
     return response;
   } on SocketException catch (e) {
@@ -135,6 +130,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  String inputTemp = "0";
   int test = 0;
   late String display = 'waiting';
   late http.Response postResp = http.Response("none", 204);
@@ -142,9 +138,25 @@ class _MyHomePageState extends State<MyHomePage> {
   late String indicator = "do you ever wonder why we are here?";
   late Timer clock;
 
+  void _stop() async {
+    Object data = jsonEncode(<String, String>{
+      "command": "kill",
+      "temp": "0",
+    });
+    postResp = await createPOST(data);
+  }
+
+  void _sendTemp(String temp) async {
+    Object data = jsonEncode(<String, String>{
+      "command": "none",
+      "temp": temp,
+    });
+    postResp = await createPOST(data);
+  }
+
   void _postMessage() async {
     getResp = await createGET();
-    postResp = await createPOST('Hello? Is anybody out there?');
+    //postResp = await createPOST(display);
     //writeMessage("hello, are you there");
   }
 
@@ -215,10 +227,24 @@ class _MyHomePageState extends State<MyHomePage> {
             Text(
               indicator,
             ),
-            Text(
-              display,
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+              Text(
+                display,
+                //style: Theme.of(context).textTheme.headlineMedium,
+              ),
+              TextButton(
+                onPressed: _stop,
+                child: const Text("STOP"),
+              )
+            ]),
+            TextField(
+              textAlign: TextAlign.center,
+              keyboardType: TextInputType.number,
+              onEditingComplete: () => _sendTemp(inputTemp),
+              onChanged: (text) {
+                inputTemp = text;
+              },
+            )
           ],
         ),
       ),
