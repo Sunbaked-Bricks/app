@@ -131,7 +131,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   String inputTemp = "0";
-  int test = 0;
+  String file = "none";
   late String display = 'waiting';
   late http.Response postResp = http.Response("none", 204);
   http.Response getResp = http.Response("none", 204);
@@ -158,6 +158,7 @@ class _MyHomePageState extends State<MyHomePage> {
     getResp = await createGET();
     //postResp = await createPOST(display);
     //writeMessage("hello, are you there");
+    file = await readMessage();
   }
 
   @override
@@ -182,11 +183,18 @@ class _MyHomePageState extends State<MyHomePage> {
           if (getResp.statusCode == 200) {
             display = getResp.body;
           } else {
-            display = "error $test";
+            display = "error";
           }
-          test++;
         }
+        indicator = file;
       });
+
+      String saveData = jsonEncode(<String, String>{
+        "post": postResp.statusCode.toString(),
+        "get": getResp.statusCode.toString(),
+        "temp": getResp.body
+      });
+      writeMessage(saveData);
     });
   }
 
