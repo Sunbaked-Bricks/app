@@ -131,6 +131,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  bool warn = false;
   String inputTemp = "0";
   String file = "none";
   late String display = 'waiting';
@@ -183,10 +184,14 @@ class _MyHomePageState extends State<MyHomePage> {
               "error sending message or data. Message code: $stat1 , Get request code: $stat2";
           if (getResp.statusCode == 200) {
             display = getResp.body;
+            if (int.parse(getResp.body) > 250) {
+              _heatWarnDialogue();
+            }
           } else {
             display = "error";
           }
         }
+        _heatWarnDialogue();
         //indicator = file;
       });
 
@@ -197,6 +202,39 @@ class _MyHomePageState extends State<MyHomePage> {
       });
       writeMessage(saveData);
     });
+  }
+
+  Future<void> _heatWarnDialogue() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('WARNING'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: const <Widget>[
+                Text(
+                    'The oven is too hot, plastic will burn at this temperature!'),
+                Text('Would you like to send the shutodwn signal to the oven?'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Shutdown'),
+              onPressed: () {
+                _stop();
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+                onPressed: () => {Navigator.of(context).pop()},
+                child: const Text("Wait"))
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -214,9 +252,8 @@ class _MyHomePageState extends State<MyHomePage> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                  builder: (context) => MyHistoryPage(
+                  builder: (context) => const MyHistoryPage(
                         title: 'History',
-                        current: file,
                       )),
             );
           },
@@ -228,6 +265,7 @@ class _MyHomePageState extends State<MyHomePage> {
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
+
       body: Center(
         // Center is a layout widget. It takes a single child and positions it
         // in the middle of the parent.
