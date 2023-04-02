@@ -191,7 +191,7 @@ class _MyHomePageState extends State<MyHomePage> {
             display = "error";
           }
         }
-        _heatWarnDialogue();
+        //_heatWarnDialogue();
         //indicator = file;
       });
 
