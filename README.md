@@ -1,16 +1,27 @@
 # sun_baked
 
-A new Flutter project.
+Application code for the sunbaked bricks solar oven project
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+As of now, this application is not available on the Google play store. However, you can install flutter and upload the app to your own phone manually.
 
-A few resources to get you started if this is your first Flutter project:
+- [Flutter Installation Guide](https://docs.flutter.dev/get-started/install)
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+You will also need to set your android device to developer mode in order to upload the application
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- [Enable developer mode](https://developer.android.com/studio/debug/dev-options)
+
+After completing these steps, plug your desired device into your computer and select it as your development device in the editor before running.
+
+## Application Description
+
+This application monitors activity from a Node MCU 1 unit that is hosting a local wifi connection. Once the Node MCU is powered on and reading you should look in your wifi settings for a connection called "Node MCU" and connect to it, once you have done this the application will be functional.
+
+## Functionality
+
+The application reads live data from the Node MCU and persistently stores the results. This can be viewed via the history button.
+
+To set the target temperature of the oven, simply enter a valid temperature value into the text field on the application and it will automatically update.
+
+There is also a button labeled STOP that will send a shutdown signal to the arduino.
