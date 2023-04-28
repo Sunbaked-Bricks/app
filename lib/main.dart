@@ -89,13 +89,60 @@ const List<Widget> materials = <Widget>[
   Text('HDPE')
 ];
 
-const List<Widget> meterials = <Widget>[
+const List<Widget> state = <Widget>[
   Text("STOP"),
   Text("START"),
 ];
 
 void main() {
   runApp(const MyApp());
+}
+
+class SelectableButton extends StatefulWidget {
+  const SelectableButton({
+    super.key,
+    required this.selected,
+    this.style,
+    required this.onPressed,
+    required this.child,
+  });
+
+  final bool selected;
+  final ButtonStyle? style;
+  final VoidCallback? onPressed;
+  final Widget child;
+
+  @override
+  State<SelectableButton> createState() => _SelectableButtonState();
+}
+
+class _SelectableButtonState extends State<SelectableButton> {
+  late final MaterialStatesController statesController;
+
+  @override
+  void initState() {
+    super.initState();
+    statesController = MaterialStatesController(
+        <MaterialState>{if (widget.selected) MaterialState.selected});
+  }
+
+  @override
+  void didUpdateWidget(SelectableButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selected != oldWidget.selected) {
+      statesController.update(MaterialState.selected, widget.selected);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      statesController: statesController,
+      style: widget.style,
+      onPressed: widget.onPressed,
+      child: widget.child,
+    );
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -142,6 +189,9 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  bool atHeat = false;
+  int timeAtHeat = 0;
+  bool start = false;
   final List<bool> _selectedPlastic = <bool>[false, false, false];
   bool warn = false;
   String inputTemp = "0";
@@ -167,9 +217,9 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  void _stop() async {
+  void _sendCommand(String instruction) async {
     Object data = jsonEncode(<String, String>{
-      "command": "kill",
+      "command": instruction,
       "temp": "0",
     });
     postResp = await createPOST(data);
@@ -213,13 +263,18 @@ class _MyHomePageState extends State<MyHomePage> {
             display = getResp.body;
             if (int.parse(getResp.body) >= 390) {
               _heatWarnDialogue();
+            } else if (int.parse(getResp.body) >= desiredHeat) {
+              atHeat = true;
+            } else if (int.parse(getResp.body) < desiredHeat) {
+              atHeat = false;
             }
           } else {
             display = "error";
           }
         }
-        //_heatWarnDialogue();
-        //indicator = file;
+        if (atHeat) {
+          timeAtHeat += 10;
+        }
       });
 
       String saveData = jsonEncode(<String, String>{
@@ -251,7 +306,7 @@ class _MyHomePageState extends State<MyHomePage> {
             TextButton(
               child: const Text('Shutdown'),
               onPressed: () {
-                _stop();
+                _sendCommand("kill");
                 Navigator.of(context).pop();
               },
             ),
@@ -298,22 +353,19 @@ class _MyHomePageState extends State<MyHomePage> {
         // Center is a layout widget. It takes a single child and positions it
         // in the middle of the parent.
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            const Text('Time at Target Heat',
+                style: TextStyle(
+                  fontSize: 25,
+                )),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 50),
+              child: Text(
+                Duration(seconds: timeAtHeat).toString().split('.')[0],
+                style: const TextStyle(fontSize: 25),
+              ),
+            ),
             // ToggleButtons with a single selection.
             Text('Plastic Type', style: theme.textTheme.titleSmall),
             const SizedBox(height: 5),
@@ -347,9 +399,38 @@ class _MyHomePageState extends State<MyHomePage> {
               style: const TextStyle(fontSize: 25),
               //style: Theme.of(context).textTheme.headlineMedium,
             ),
-            TextButton(
-              onPressed: _stop,
-              child: const Text("STOP"),
+            SelectableButton(
+              selected: start,
+              style: ButtonStyle(
+                foregroundColor: MaterialStateProperty.resolveWith<Color?>(
+                  (Set<MaterialState> states) {
+                    if (states.contains(MaterialState.selected)) {
+                      return Colors.red[900];
+                    }
+                    return Colors.green[900]; // defer to the defaults
+                  },
+                ),
+                backgroundColor: MaterialStateProperty.resolveWith<Color?>(
+                  (Set<MaterialState> states) {
+                    if (states.contains(MaterialState.selected)) {
+                      return Colors.red[100];
+                    }
+                    return Colors.green[100];
+                  },
+                ),
+              ),
+              onPressed: () {
+                setState(() {
+                  if (start) {
+                    _sendCommand("kill");
+                  }
+                  if (!start) {
+                    _sendCommand("start");
+                  }
+                  start = !start;
+                });
+              },
+              child: start ? state[0] : state[1],
             ),
           ],
         ),
