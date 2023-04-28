@@ -38,23 +38,6 @@ Future<String> readMessage() async {
     return 'error reading file';
   }
 }
-/*
-class HistoryPage extends StatelessWidget {
-  const HistoryPage({super.key});
-
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'SunBaked Proto',
-      theme: ThemeData(
-        primarySwatch: Colors.orange,
-      ),
-      home: const MyHistoryPage(title: 'SunBaked'),
-    );
-  }
-}
-*/
 
 class MyHistoryPage extends StatefulWidget {
   final String title;
@@ -66,28 +49,23 @@ class MyHistoryPage extends StatefulWidget {
 
 class _MyHistoryPageState extends State<MyHistoryPage> {
   late String file;
-
-  late String indicator = "do you ever wonder why we are here?";
-  late Timer clock;
+  String indicator = "";
 
   void _getFile() async {
     file = await readMessage();
+    indicator = file;
+  }
+
+  void _updateHistory() {
+    setState(() {
+      _getFile();
+    });
   }
 
   @override
   void initState() {
     super.initState();
-
-    _getFile();
-    //10 second clock that runs continuously
-    clock = Timer.periodic(const Duration(seconds: 10), (Timer t) {
-      _getFile();
-
-      //after post and get, update screen to display information
-      setState(() {
-        indicator = file;
-      });
-    });
+    _updateHistory();
   }
 
   @override
@@ -97,7 +75,6 @@ class _MyHistoryPageState extends State<MyHistoryPage> {
         title: const Text("History"),
         leading: GestureDetector(
           onTap: () {
-            clock.cancel();
             Navigator.pop(context);
           },
           child: const Icon(
@@ -116,6 +93,11 @@ class _MyHistoryPageState extends State<MyHistoryPage> {
             ),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _updateHistory,
+        tooltip: 'Refresh',
+        child: const Icon(Icons.refresh),
       ),
     );
   }

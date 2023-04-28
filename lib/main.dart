@@ -83,6 +83,17 @@ Future<http.Response> createGET() async {
   }
 }
 
+const List<Widget> materials = <Widget>[
+  Text('LDPE'),
+  Text('MDPE'),
+  Text('HDPE')
+];
+
+const List<Widget> meterials = <Widget>[
+  Text("STOP"),
+  Text("START"),
+];
+
 void main() {
   runApp(const MyApp());
 }
@@ -131,6 +142,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  final List<bool> _selectedPlastic = <bool>[false, false, false];
   bool warn = false;
   String inputTemp = "0";
   String file = "none";
@@ -139,6 +151,21 @@ class _MyHomePageState extends State<MyHomePage> {
   http.Response getResp = http.Response("none", 204);
   late String indicator = "do you ever wonder why we are here?";
   late Timer clock;
+  int desiredHeat = 125;
+
+  void _updatePlastic(int p) {
+    switch (p) {
+      case 0:
+        desiredHeat = 212;
+        break;
+      case 1:
+        desiredHeat = 248;
+        break;
+      case 2:
+        desiredHeat = 259;
+        break;
+    }
+  }
 
   void _stop() async {
     Object data = jsonEncode(<String, String>{
@@ -184,7 +211,7 @@ class _MyHomePageState extends State<MyHomePage> {
               "error sending message or data. Message code: $stat1 , Get request code: $stat2";
           if (getResp.statusCode == 200) {
             display = getResp.body;
-            if (int.parse(getResp.body) > 250) {
+            if (int.parse(getResp.body) >= 390) {
               _heatWarnDialogue();
             }
           } else {
@@ -216,7 +243,7 @@ class _MyHomePageState extends State<MyHomePage> {
               children: const <Widget>[
                 Text(
                     'The oven is too hot, plastic will burn at this temperature!'),
-                Text('Would you like to send the shutodwn signal to the oven?'),
+                Text('Would you like to send the shutdown signal to the oven?'),
               ],
             ),
           ),
@@ -239,6 +266,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
     //
@@ -286,27 +314,43 @@ class _MyHomePageState extends State<MyHomePage> {
           // horizontal).
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            // ToggleButtons with a single selection.
+            Text('Plastic Type', style: theme.textTheme.titleSmall),
+            const SizedBox(height: 5),
+            ToggleButtons(
+              onPressed: (int index) {
+                setState(() {
+                  // The button that is tapped is set to true, and the others to false.
+                  for (int i = 0; i < _selectedPlastic.length; i++) {
+                    _selectedPlastic[i] = i == index;
+                  }
+                  _updatePlastic(index);
+                });
+              },
+              borderRadius: const BorderRadius.all(Radius.circular(8)),
+              selectedBorderColor: Colors.orange[700],
+              selectedColor: Colors.white,
+              fillColor: Colors.orange[200],
+              color: Colors.orange[400],
+              constraints: const BoxConstraints(
+                minHeight: 40.0,
+                minWidth: 80.0,
+              ),
+              isSelected: _selectedPlastic,
+              children: materials,
+            ),
             Text(
               indicator,
             ),
-            Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
-              Text(
-                display,
-                //style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              TextButton(
-                onPressed: _stop,
-                child: const Text("STOP"),
-              )
-            ]),
-            TextField(
-              textAlign: TextAlign.center,
-              keyboardType: TextInputType.number,
-              onEditingComplete: () => _sendTemp(inputTemp),
-              onChanged: (text) {
-                inputTemp = text;
-              },
-            )
+            Text(
+              display,
+              style: const TextStyle(fontSize: 25),
+              //style: Theme.of(context).textTheme.headlineMedium,
+            ),
+            TextButton(
+              onPressed: _stop,
+              child: const Text("STOP"),
+            ),
           ],
         ),
       ),
