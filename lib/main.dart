@@ -40,13 +40,14 @@ Future<String> readMessage() async {
   }
 }
 
-Future<http.Response> createPOST(Object data) async {
+Future<http.Response> createPOST(Object data, String destination) async {
   try {
-    final response = await http.post(Uri.parse('http://192.168.1.1/info'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: data);
+    final response =
+        await http.post(Uri.parse('http://192.168.1.1/$destination'),
+            headers: <String, String>{
+              'Content-Type': 'application/json; charset=UTF-8',
+            },
+            body: data);
 
     return response;
   } on SocketException catch (e) {
@@ -217,20 +218,12 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  void _sendCommand(String instruction) async {
+  void _sendCommand(String instruction, String destination) async {
     Object data = jsonEncode(<String, String>{
       "command": instruction,
       "temp": "0",
     });
-    postResp = await createPOST(data);
-  }
-
-  void _sendTemp(String temp) async {
-    Object data = jsonEncode(<String, String>{
-      "command": "none",
-      "temp": temp,
-    });
-    postResp = await createPOST(data);
+    postResp = await createPOST(data, destination);
   }
 
   void _postMessage() async {
@@ -261,7 +254,7 @@ class _MyHomePageState extends State<MyHomePage> {
               "error sending message or data. Message code: $stat1 , Get request code: $stat2";
           if (getResp.statusCode == 200) {
             display = getResp.body;
-            if (int.parse(getResp.body) >= 390) {
+            if (int.parse(getResp.body) >= 300) {
               _heatWarnDialogue();
             } else if (int.parse(getResp.body) >= desiredHeat) {
               atHeat = true;
@@ -274,6 +267,9 @@ class _MyHomePageState extends State<MyHomePage> {
         }
         if (atHeat) {
           timeAtHeat += 10;
+          if (timeAtHeat >= 1200) {
+            _doneCookingDialogue();
+          }
         }
       });
 
@@ -306,7 +302,40 @@ class _MyHomePageState extends State<MyHomePage> {
             TextButton(
               child: const Text('Shutdown'),
               onPressed: () {
-                _sendCommand("kill");
+                _sendCommand("kill", "relayOff");
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+                onPressed: () => {Navigator.of(context).pop()},
+                child: const Text("Wait"))
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _doneCookingDialogue() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('DONE'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: const <Widget>[
+                Text(
+                    'The plastic has been at temperature for the desired time (20 minutes)'),
+                Text('Would you like to send the shutdown signal to the oven?'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Shutdown'),
+              onPressed: () {
+                _sendCommand("kill", "relayOff");
                 Navigator.of(context).pop();
               },
             ),
@@ -422,10 +451,10 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: () {
                 setState(() {
                   if (start) {
-                    _sendCommand("kill");
+                    _sendCommand("kill", "relayOff");
                   }
                   if (!start) {
-                    _sendCommand("start");
+                    _sendCommand("start", "relayOn");
                   }
                   start = !start;
                 });
