@@ -190,6 +190,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  bool userOverride = false;
   bool atHeat = false;
   int timeAtHeat = 0;
   bool start = false;
@@ -267,7 +268,7 @@ class _MyHomePageState extends State<MyHomePage> {
         }
         if (atHeat) {
           timeAtHeat += 10;
-          if (timeAtHeat >= 1200) {
+          if (timeAtHeat >= 1200 && !userOverride) {
             _doneCookingDialogue();
           }
         }
@@ -340,7 +341,10 @@ class _MyHomePageState extends State<MyHomePage> {
               },
             ),
             TextButton(
-                onPressed: () => {Navigator.of(context).pop()},
+                onPressed: () {
+                  userOverride = true;
+                  Navigator.of(context).pop();
+                },
                 child: const Text("Wait"))
           ],
         );
