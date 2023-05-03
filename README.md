@@ -4,6 +4,8 @@ Application code for the sunbaked bricks solar oven project
 
 ## Getting Started
 
+### Manual installation
+
 As of now, this application is not available on the Google play store. However, you can install flutter and upload the app to your own phone manually.
 
 - [Flutter Installation Guide](https://docs.flutter.dev/get-started/install)
@@ -12,7 +14,12 @@ You will also need to set your android device to developer mode in order to uplo
 
 - [Enable developer mode](https://developer.android.com/studio/debug/dev-options)
 
-After completing these steps, plug your desired device into your computer and select it as your development device in the editor before running.
+You will only need to reach step 3 of the flutter installation to upload the dev version of the application to your device.
+After completing these steps, plug your desired device into your computer and select it as your development device on the option in the bottom right corner of the VS code editor before running the code.
+
+### Raw apk dowload: 
+Or download the apk builds from the github
+
 
 ## Application Description
 
