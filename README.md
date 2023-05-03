@@ -20,6 +20,10 @@ After completing these steps, plug your desired device into your computer and se
 ### Raw apk dowload: 
 Or download the apk builds from the github
 
+-[app-arm64-v8a-release.apk](./app-arm64-v8a-release.apk)
+-[app-armeabi-v7a-release.apk](./app-armeabi-v7a-release.apk)
+-[app-x86_64-release.apk](app-x86_64-release.apk)
+
 
 ## Application Description
 
