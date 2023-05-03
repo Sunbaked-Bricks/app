@@ -36,6 +36,6 @@ This application monitors activity from a Node MCU 1 unit that is hosting a loca
 
 The application reads live data from the Node MCU and persistently stores the results. This can be viewed via the history button.
 
-To set the target temperature of the oven, simply enter a valid temperature value into the text field on the application and it will automatically update.
+To set the target temperature of the oven, select one of the plastic material options.
 
-There is also a button labeled STOP that will send a shutdown signal to the arduino.
+There is also a button labeled START that will send the signal to turn on the oven, this toggles to STOP which turns off the oven when pressed.
