@@ -18,15 +18,7 @@ You will only need to reach step 3 of the flutter installation to upload the dev
 After completing these steps, plug your desired device into your computer and select it as your development device on the option in the bottom right corner of the VS code editor before running the code.
 
 ### Raw apk dowload: 
-Or download the raw apk builds for your device from the github
-
-- [app-arm64-v8a-release.apk](./app-arm64-v8a-release.apk)
-
-- [app-armeabi-v7a-release.apk](./app-armeabi-v7a-release.apk)
-
-- [app-x86_64-release.apk](app-x86_64-release.apk)
-
-You will need to allow the appliaction to run and press the drop down to "install anyways" when prompted.
+Or download the raw apk builds for your device from the github release page.
 
 ## Application Description
 
